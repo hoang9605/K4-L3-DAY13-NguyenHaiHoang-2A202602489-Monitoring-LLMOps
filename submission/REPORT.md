@@ -4,13 +4,13 @@
 
 ## 1. Thông tin học viên
 
-- **Họ và tên:**
-- **MSSV:**
+- **Họ và tên:** Nguyễn Hải Hoàng
+- **MSSV:** 2A202602489
 - **Lớp:** K4-L3B
-- **Repository URL:**
+- **Repository URL:** https://github.com/hoang9605/K4-L3-DAY13-NguyenHaiHoang-2A202602489-Monitoring-LLMOps
 - **Commit SHA cuối:**
 - **Challenge ID:**
-- **Tên project Langfuse cá nhân:** `day13-k4-l3b-<MSSV>`
+- **Tên project Langfuse cá nhân:** `day13-k4-l3b-2A202602489`
 
 ## 2. Evidence index
 
@@ -37,13 +37,15 @@
 
 | Nội dung | Baseline | Kết quả cuối | Nhận xét |
 |---|---|---|---|
-| `validate_logs.py` | | | |
-| `validate_dashboard.py` | | | |
-| `pytest` | | | |
+| `validate_logs.py` | 30/100; 21 log records; 20 thiếu trường bắt buộc; 20 thiếu metadata; 0 correlation ID duy nhất | | API chạy được nhưng logging CP1 chưa hoàn thiện. |
+| `validate_dashboard.py` | Hợp lệ 6/6 panel trong dashboard contract | | Chưa xác nhận dashboard runtime có dữ liệu. |
+| `pytest` | 22 passed (5.04s) | | Public tests qua trước khi hoàn thiện các TODO. |
 | Số traces hợp lệ | | | |
-| Số PII leak | | | |
+| Số PII leak | Validator phát hiện 0/21 log records | | Workload CP0 chưa chứng minh PII redaction hoạt động. |
 | Latency P95 / TTFT P95 | | | |
 | Retrieval success rate | | | |
+
+**Ghi nhận CP0:** `python scripts/load_test.py` gửi 10 request; cả 10 trả HTTP 200 nhưng đều có `correlation_id=MISSING`. Kết quả baseline ở trên được ghi từ output terminal trước khi sửa các TODO của CP1. Sau khi hoàn thiện logging, cần tạo log mới và chạy lại validator vì script đọc toàn bộ `data/logs.jsonl`.
 
 ## 4. Logging và PII
 
