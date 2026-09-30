@@ -37,11 +37,11 @@
 
 | Nội dung | Baseline | Kết quả cuối | Nhận xét |
 |---|---|---|---|
-| `validate_logs.py` | 30/100; 21 log records; 20 thiếu trường bắt buộc; 20 thiếu metadata; 0 correlation ID duy nhất | | API chạy được nhưng logging CP1 chưa hoàn thiện. |
+| `validate_logs.py` | 30/100; 21 log records; 20 thiếu trường bắt buộc; 20 thiếu metadata; 0 correlation ID duy nhất | CP1: 100/100; 27 log records; 0 thiếu trường; 12 correlation ID duy nhất | Đã kiểm tra lại sau request PII giả; chạy lại validator trên commit cuối. |
 | `validate_dashboard.py` | Hợp lệ 6/6 panel trong dashboard contract | | Chưa xác nhận dashboard runtime có dữ liệu. |
-| `pytest` | 22 passed (5.04s) | | Public tests qua trước khi hoàn thiện các TODO. |
+| `pytest` | 22 passed (5.04s) | CP1: 25 passed (2.14s) | Test `session_id` chứa email fail trước khi sửa processor và pass sau khi sửa; chạy lại toàn bộ trên commit cuối. |
 | Số traces hợp lệ | Lần đầu chưa xác minh; sau khi khởi động lại đã thấy trace trên Langfuse (chưa đếm số lượng) | | Lần đầu startup báo `tracing_enabled=false` và export HTTP 401; lần chạy lại `/health` báo `tracing_enabled=true`. Chưa xác minh cấu trúc span. |
-| Số PII leak | Validator phát hiện 0/21 log records | | Workload CP0 chưa chứng minh PII redaction hoạt động. |
+| Số PII leak | Validator phát hiện 0/21 log records | CP1: validator phát hiện 0/27 log records mới | Request PII giả cho thấy `session_id` và `message_preview` được che trong log thực tế. |
 | Latency P95 / TTFT P95 | | | |
 | Retrieval success rate | | | |
 
@@ -51,10 +51,10 @@
 
 ## 4. Logging và PII
 
-- **Cách tạo/nhận và truyền correlation ID:**
-- **Các metadata được ghi vào structured log:**
-- **Cách bảo đảm PII được scrub trước khi ghi:**
-- **Cách kiểm chứng kết quả:**
+- **Cách tạo/nhận và truyền correlation ID:** Middleware xóa context cũ, nhận header `x-request-id` đúng dạng `req-<8-hex>` hoặc sinh ID mới, rồi bind vào structlog trước khi xử lý request. ID được trả trong body và header response. Log `request_received` và `response_sent` của request `req-04a1b2c3` có cùng ID.
+- **Các metadata được ghi vào structured log:** Trước `request_received`, API bind `user_id_hash` (SHA-256 rút gọn), `session_id`, `feature`, `model` và `env`. Hai event cùng mang các trường này; `response_sent` ghi thêm latency, TTFT, token, cost và quality proxy.
+- **Cách bảo đảm PII được scrub trước khi ghi:** Processor `scrub_event` che các giá trị chuỗi cấp cao nhất và trong `payload`, rồi mới tới `JsonlFileProcessor`/JSON renderer. Test với dữ liệu giả cho thấy email trong `session_id` và email, điện thoại Việt Nam, CCCD, thẻ trong `message_preview` đều được thay bằng nhãn `[REDACTED_...]`.
+- **Cách kiểm chứng kết quả:** `python -m pytest -q` đạt 25 passed ở CP1; `python scripts/validate_logs.py` đạt 100/100 trên 27 bản ghi, 12 correlation ID duy nhất, 0 PII leak. Xem [structured log](evidence/04-structured-log.png), [PII redaction](evidence/05-pii-redaction.png) và [log validator](evidence/02-log-validator.png). Chạy lại tests và validator trên commit cuối trước khi nộp.
 
 ## 5. Tracing và prompt versioning
 
