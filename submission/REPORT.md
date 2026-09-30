@@ -40,12 +40,14 @@
 | `validate_logs.py` | 30/100; 21 log records; 20 thiếu trường bắt buộc; 20 thiếu metadata; 0 correlation ID duy nhất | | API chạy được nhưng logging CP1 chưa hoàn thiện. |
 | `validate_dashboard.py` | Hợp lệ 6/6 panel trong dashboard contract | | Chưa xác nhận dashboard runtime có dữ liệu. |
 | `pytest` | 22 passed (5.04s) | | Public tests qua trước khi hoàn thiện các TODO. |
-| Số traces hợp lệ | | | |
+| Số traces hợp lệ | Lần đầu chưa xác minh; sau khi khởi động lại đã thấy trace trên Langfuse (chưa đếm số lượng) | | Lần đầu startup báo `tracing_enabled=false` và export HTTP 401; lần chạy lại `/health` báo `tracing_enabled=true`. Chưa xác minh cấu trúc span. |
 | Số PII leak | Validator phát hiện 0/21 log records | | Workload CP0 chưa chứng minh PII redaction hoạt động. |
 | Latency P95 / TTFT P95 | | | |
 | Retrieval success rate | | | |
 
-**Ghi nhận CP0:** `python scripts/load_test.py` gửi 10 request; cả 10 trả HTTP 200 nhưng đều có `correlation_id=MISSING`. Kết quả baseline ở trên được ghi từ output terminal trước khi sửa các TODO của CP1. Sau khi hoàn thiện logging, cần tạo log mới và chạy lại validator vì script đọc toàn bộ `data/logs.jsonl`.
+**Ghi nhận CP0:** `python scripts/load_test.py` gửi 10 request; cả 10 trả HTTP 200 nhưng đều có `correlation_id=MISSING`. Mỗi request tạo log JSON `request_received` và `response_sent`; các preview chứa email, số điện thoại và thẻ mẫu đã được `summarize_text()` che thành `[REDACTED_...]`. Đây chưa phải bằng chứng bộ lọc PII ở bước ghi log đã hoạt động. Server báo `tracing_enabled=false` và `Failed to export spans batch code: 401, reason: Unauthorized`; cần kiểm tra cấu hình Langfuse trước khi lấy trace evidence ở CP2. Kết quả baseline ở trên được ghi từ output terminal trước khi sửa các TODO của CP1. Sau khi hoàn thiện logging, cần tạo log mới và chạy lại validator vì script đọc toàn bộ `data/logs.jsonl`.
+
+**Sau khi khởi động lại ở CP0:** `/health` trả `tracing_enabled=true`; học viên xác nhận đã thấy trace trên web Langfuse của mình, nhưng chưa ghi số lượng/trace ID hoặc ảnh evidence. Workload vẫn trả HTTP 200. Langfuse báo HTTP 404 cho prompt `day13-chat` với label `production`, nên ứng dụng dùng prompt local fallback; cần tạo prompt version 1 và gắn label `production` trước khi lấy evidence về prompt version.
 
 ## 4. Logging và PII
 
