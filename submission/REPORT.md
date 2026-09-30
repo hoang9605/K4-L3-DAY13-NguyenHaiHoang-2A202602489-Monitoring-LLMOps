@@ -8,7 +8,7 @@
 - **MSSV:** 2A202602489
 - **Lớp:** K4-L3B
 - **Repository URL:** https://github.com/hoang9605/K4-L3-DAY13-NguyenHaiHoang-2A202602489-Monitoring-LLMOps
-- **Commit SHA cuối:**
+- **Commit SHA code và evidence runtime:** `a1ac3aa5c6748c57a4c4d9904935db3c982c574b` (ảnh 01 và cập nhật report được thêm ở commit evidence tiếp theo).
 - **Challenge ID:** `day13-k4-l3b-monitoring-llmops-v1`
 - **Tên project Langfuse cá nhân:** `day13-k4-l3b-2A202602489`
 
@@ -18,7 +18,7 @@
 
 | Evidence | Đường dẫn |
 |---|---|
-| Pytest cuối | `evidence/01-pytest.png` |
+| Pytest sau commit code | [01](evidence/01-pytest.txt) |
 | Log validator | `evidence/02-log-validator.png` |
 | Dashboard validator | [03](evidence/03-dashboard-validator.txt) |
 | Structured log | `evidence/04-structured-log.png` |
@@ -39,7 +39,7 @@
 |---|---|---|---|
 | `validate_logs.py` | 30/100; 21 log records; 20 thiếu trường bắt buộc; 20 thiếu metadata; 0 correlation ID duy nhất | Sau CP3: 100/100; 153 log records; 0 thiếu trường; 58 correlation ID duy nhất; 0 PII leak | Ảnh 02 là lần chạy CP1 đạt 100/100; đã kiểm tra lại sau challenge và recovery. |
 | `validate_dashboard.py` | Hợp lệ 6/6 panel trong dashboard contract | Hợp lệ 6/6; dashboard runtime có dữ liệu trong ảnh 11a–11c | Validator chỉ kiểm tra cấu trúc YAML; ảnh 11 cho thấy biểu đồ chạy thực tế. |
-| `pytest` | 22 passed (5.04s) | Trước commit cuối: 25 passed (2.95s) | Test `session_id` chứa email fail trước khi sửa processor và pass sau khi sửa; chạy lại toàn bộ trên commit cuối. |
+| `pytest` | 22 passed (5.04s) | Sau commit code `a1ac3aa`: 25 passed (2.26s) | Test `session_id` chứa email fail trước khi sửa processor và pass sau khi sửa; xem evidence 01. |
 | Số traces hợp lệ | Lần đầu chưa xác minh; sau khi khởi động lại đã thấy trace trên Langfuse (chưa đếm số lượng) | CP2: ít nhất 11 trace mới có đúng cây ba observation trong một khoảng kiểm tra 30 phút | Xác minh qua Langfuse Observations API v2: `lab-agent-run` là cha của `retrieval` và `generation`; trace gắn prompt v1/v2. |
 | Số PII leak | Validator phát hiện 0/21 log records | CP1: validator phát hiện 0/27 log records mới | Request PII giả cho thấy `session_id` và `message_preview` được che trong log thực tế. |
 | Latency P95 / TTFT P95 | CP3 baseline mới: 1110 ms / 50 ms (10 request; một request 1889 ms kéo P95 lên) | Sau khi tắt incident: 166 ms / 50 ms (10 request) | Trong incident: P95 khoảng 2654 ms / 50 ms (5 request). Các giá trị P95 tính theo phép nội suy percentile của dashboard. |
@@ -54,7 +54,7 @@
 - **Cách tạo/nhận và truyền correlation ID:** Middleware xóa context cũ, nhận header `x-request-id` đúng dạng `req-<8-hex>` hoặc sinh ID mới, rồi bind vào structlog trước khi xử lý request. ID được trả trong body và header response. Log `request_received` và `response_sent` của request `req-e100a004` có cùng ID, khớp metadata của trace trong ảnh 08a.
 - **Các metadata được ghi vào structured log:** Trước `request_received`, API bind `user_id_hash` (SHA-256 rút gọn), `session_id`, `feature`, `model` và `env`. Hai event cùng mang các trường này; `response_sent` ghi thêm latency, TTFT, token, cost và quality proxy.
 - **Cách bảo đảm PII được scrub trước khi ghi:** Processor `scrub_event` che các giá trị chuỗi cấp cao nhất và trong `payload`, rồi mới tới `JsonlFileProcessor`/JSON renderer. Test với dữ liệu giả cho thấy email trong `session_id` và email, điện thoại Việt Nam, CCCD, thẻ trong `message_preview` đều được thay bằng nhãn `[REDACTED_...]`.
-- **Cách kiểm chứng kết quả:** `python -m pytest -q` đạt 25 passed ở CP1; `python scripts/validate_logs.py` đạt 100/100 trên 27 bản ghi, 12 correlation ID duy nhất, 0 PII leak. Xem [structured log](evidence/04-structured-log.png), [PII redaction](evidence/05-pii-redaction.png) và [log validator](evidence/02-log-validator.png). Chạy lại tests và validator trên commit cuối trước khi nộp.
+- **Cách kiểm chứng kết quả:** `python -m pytest -q` đạt 25 passed sau commit code; `python scripts/validate_logs.py` đạt 100/100 trên 153 bản ghi, 58 correlation ID duy nhất, 0 PII leak sau CP3. Xem [structured log](evidence/04-structured-log.png), [PII redaction](evidence/05-pii-redaction.png), [log validator](evidence/02-log-validator.png) và [pytest](evidence/01-pytest.txt).
 
 ## 5. Tracing và prompt versioning
 
@@ -101,10 +101,10 @@
 
 ## 9. Checklist trước khi nộp
 
-- [ ] Kết quả và evidence thuộc commit SHA cuối.
-- [ ] Tất cả ảnh/output mở được bằng đường dẫn tương đối.
-- [ ] Incident evidence nối đúng metric → log → trace.
-- [ ] Trace/prompt evidence thuộc project Langfuse cá nhân và ảnh không lộ key/secret.
-- [ ] Repository chạy lại được theo README.
-- [ ] Không có secret, API key, PII thô hoặc evidence của người khác/lớp khác.
+- [x] Kết quả và evidence thuộc commit code được ghi ở mục 1; evidence 01 ghi mã commit đó và kết quả pytest sau commit.
+- [x] Tất cả ảnh/output mở được bằng đường dẫn tương đối.
+- [x] Incident evidence nối đúng metric → log → trace.
+- [x] Trace/prompt evidence thuộc project Langfuse cá nhân và ảnh không lộ secret.
+- [x] Repository chạy lại được theo README.
+- [x] Không có secret, API key bí mật, PII thô hoặc evidence của người khác/lớp khác.
 - [ ] URL repo và commit SHA cuối đã được nộp trên LMS/Codelabs.
