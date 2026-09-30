@@ -7,7 +7,7 @@ primary_slo:
     total_event: 'event == "request_received"'
   target_percent: 99.5
   error_budget_percent: 0.5
-  note: Học viên phải giải thích hoặc điều chỉnh ngưỡng bằng baseline của mình. Ví dụ nếu có 10,000 request trong cửa sổ 28 ngày, error budget 0.5% nghĩa là tối đa 50 request được phép không đạt SLO.
+  note: 'Baseline CP0/CP1 chủ yếu khoảng 160–550 ms; các request 6–12 giây xuất hiện khi Langfuse bị DNS/timeout và cho thấy cần theo dõi tail latency. Chọn ngưỡng 3000 ms để bắt các request chậm rõ rệt. Good event là response_sent có latency_ms <= 3000; tổng là request_received, nên request lỗi hoặc thiếu response cũng tiêu tốn budget. Trong 28 ngày, với 10000 request, 99.5% SLO cho phép tối đa 50 request chậm hoặc lỗi (10000 x 0.005). Với 1000 request là 5; với một mẫu nhỏ chỉ 18 request, tối đa floor(18 x 0.005) = 0 request nếu muốn đạt 99.5%. Mẫu lab nhỏ chưa đủ để chứng minh SLO 28 ngày.'
 guardrails:
   error_rate_pct_max: 2
   daily_cost_usd_max: 2.5

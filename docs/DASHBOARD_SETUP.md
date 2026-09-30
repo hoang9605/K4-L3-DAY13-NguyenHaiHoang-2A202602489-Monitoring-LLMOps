@@ -21,11 +21,29 @@ Giữ time range mặc định 60 phút, refresh 30 giây và hiển thị thres
 
 ## Cách dựng
 
+Dashboard đã có sẵn tại `dashboard.py`. Trên Windows, tạo môi trường riêng để
+Streamlit không thay đổi dependencies của API:
+
+```powershell
+python -m venv .venv-dashboard
+.\.venv-dashboard\Scripts\python.exe -m pip install -r dashboard-requirements.txt
+.\.venv-dashboard\Scripts\python.exe -m streamlit run dashboard.py
+```
+
+Mở URL local mà Streamlit in ra (thường là `http://localhost:8501`). Dashboard
+đọc trực tiếp `data/logs.jsonl`, giữ 60 phút UTC gần nhất và tự refresh mỗi 30
+giây. Sáu panel lấy tên, đơn vị và threshold từ `config/dashboard.yaml`; đường
+đỏ nét đứt là threshold. Nếu trang trống, chạy lại `python scripts/load_test.py`
+trong môi trường API đang chạy. Không cần cài Streamlit vào venv của API.
+
+Error rate lấy `request_failed / request_received`. Retrieval success lấy mọi
+event có `tool_success`, gồm `response_sent` và `request_failed`, để không bỏ
+sót lần gọi tool thành công.
+
 1. Hoàn thiện logging/PII và chạy API.
 2. Chạy `python scripts/load_test.py --concurrency 5` để tạo baseline.
-3. Dùng `data/logs.jsonl` làm nguồn chuẩn để tạo đúng sáu panel bằng Streamlit, notebook, Grafana hoặc công cụ tương đương. Langfuse vẫn là nơi mở trace/prompt version để điều tra sâu.
-4. Đặt tên panel, đơn vị và threshold giống contract.
-5. Chạy validator:
+3. Khởi động dashboard bằng lệnh Streamlit ở trên và xác nhận sáu panel có dữ liệu. Langfuse vẫn là nơi mở trace/prompt version để điều tra sâu.
+4. Chạy validator:
 
 ```bash
 python scripts/validate_dashboard.py

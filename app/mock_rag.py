@@ -4,6 +4,8 @@ import time
 
 from .incidents import STATE
 
+from .tracing import observe
+
 CORPUS = {
     "refund": ["Refunds are available within 7 days with proof of purchase."],
     "monitoring": ["Metrics detect incidents, logs identify affected requests, traces localize the root cause."],
@@ -11,6 +13,12 @@ CORPUS = {
 }
 
 
+@observe(
+    name="retrieval",
+    as_type="retriever",
+    capture_input=False,
+    capture_output=False,
+)
 def retrieve(message: str) -> list[str]:
     if STATE["tool_fail"]:
         raise RuntimeError("Vector store timeout")

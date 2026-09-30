@@ -1,0 +1,4 @@
+# Install in a dedicated dashboard virtual environment, not the API environment.
+# Streamlit installs compatible pandas and Altair versions itself.
+streamlit>=1.42,<2
+PyYAML>=6,<7
